@@ -289,6 +289,18 @@
    font-size: 2.5rem;
    
   }
+
+  /* PDF specific styles */
+  @media print {
+    /* Ensure page breaks before these sections */
+    .dashboard, .charts {
+      page-break-before: always;
+    }
+    /* Adjust margins for PDF */
+    body {
+      margin: 0.5in !important; /* Adjust as needed */
+    }
+  }
 </style>
 </head>
 <body>
@@ -797,29 +809,49 @@
     }
   };
 
-  // Print PDF
-  printPdfBtn.onclick = () => {
-    const element = document.querySelector('.container'); // Or target a more specific element if needed
+// In your existing <script> block, locate the printPdfBtn.onclick function.
+// Replace its content with the following:
 
-    // Temporarily hide elements not needed in PDF
-    const elementsToHide = [addItemForm, document.querySelector('.action-buttons'), document.getElementById('modeToggleBtn')];
-    elementsToHide.forEach(el => el.style.display = 'none');
+printPdfBtn.onclick = () => {
+    // Target only the itemTable for PDF generation
+    const element = document.getElementById('itemTable');
 
-    // Add a title for the PDF
-    const originalTitle = document.querySelector('h1').outerHTML;
-    document.querySelector('h1').outerHTML = `<h1>Inventory Report - ${new Date().toLocaleDateString()}</h1>`;
+    // Temporarily hide elements that should *not* be in the PDF.
+    // In this case, we only want the table, so we don't need to hide other sections.
+    // The previous approach of hiding elements within the container is now irrelevant
+    // because we are only selecting the table.
 
-    html2pdf().from(element).set({
-      margin: 1,
-      filename: `inventory_report_${new Date().toISOString().slice(0,10)}.pdf`,
-      html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    // No need to restore original title if we are just printing the table,
+    // but if you want a title, you'd prepend it to the element being printed.
+    // For now, let's just make sure the table has a clear heading.
+
+    // Create a temporary div to hold the table and a report title for the PDF
+    const printContent = document.createElement('div');
+    printContent.style.padding = '10px'; // Add some padding around the content
+    printContent.innerHTML = `
+        <h1 style="text-align: center; margin-bottom: 20px;">Inventory Items Report - ${new Date().toLocaleDateString()}</h1>
+        ${element.outerHTML}
+    `;
+
+    // Important: Temporarily remove action buttons from the cloned table in printContent
+    // This needs to be done on the `printContent`'s version of the table.
+    const clonedTable = printContent.querySelector('#itemTable');
+    if (clonedTable) {
+        clonedTable.querySelectorAll('th:last-child, td:last-child').forEach(cell => {
+            cell.style.display = 'none'; // Hide the Actions column
+        });
+    }
+
+    html2pdf().from(printContent).set({
+        margin: [0.5, 0.5, 0.5, 0.5], // Adjust margins as desired
+        filename: `inventory_items_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     }).save().then(() => {
-      // Restore original display
-      elementsToHide.forEach(el => el.style.display = '');
-      document.querySelector('h1').outerHTML = originalTitle; // Restore original h1
+        // No elements were hidden from the main page, so no restoration needed.
+        // The temporary `printContent` div is gone after .save()
     });
-  };
+};
 
   // Initial load
   loadDarkModeSetting();
