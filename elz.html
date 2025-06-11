@@ -51,6 +51,15 @@
     font-family: "ABeeZee", sans-serif;
   }
 
+
+footer{
+    background-color: rgb(6, 93, 255);
+    height: 50px;
+    text-align: center;
+    color: white;
+   
+    
+}
   label{
     font-family: "ABeeZee", sans-serif;
   }
@@ -150,6 +159,7 @@
     cursor: not-allowed;
   }
 
+  
 
   input[type="number"]{
     border-radius: 5px;
@@ -366,6 +376,14 @@
       border-color: #555;
       color: var(--text-dark);
   }
+  input[type="date"]{
+    margin-left: 20px;
+    height: 30px;
+    border-radius: 5px;
+   border: 1px solid #ccc;
+
+  
+  }
 
   .close-button {
       color: #aaa;
@@ -415,12 +433,14 @@
                 <option value="lowSold">Low Sold</option>
             </select>
 
+            <div class="date">
             <label for="filterStartDate">Start Date:</label>
             <input type="date" id="filterStartDate" />
 
             <label for="filterEndDate">End Date:</label>
             <input type="date" id="filterEndDate" />
         </div>
+    </div>
 
         <div class="action-buttons">
             <button id="downloadZipBtn">Download Inventory (ZIP)</button>
@@ -525,7 +545,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
-                const addItemForm = document.getElementById('addItemForm');
+       const addItemForm = document.getElementById('addItemForm');
         const itemTableBody = document.getElementById('itemTableBody');
         const totalItemsCount = document.getElementById('totalItemsCount');
         const totalQuantityCount = document.getElementById('totalQuantityCount');
@@ -565,6 +585,9 @@
 
         // Data storage
         let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
+
+        // New global variable to store currently filtered items for PDF generation
+        let filteredItemsForDisplay = [];
 
         // Password for editing/deleting
         const password = '789632';
@@ -622,6 +645,9 @@
                 displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
             }
 
+            // Store the filtered items in the global variable for PDF generation
+            filteredItemsForDisplay = displayItems;
+
             displayItems.forEach(item => {
                 const tr = document.createElement('tr');
 
@@ -671,6 +697,7 @@
 
                 // Edit All button with password prompt (opens modal)
                 tr.querySelector('.edit').onclick = () => {
+                    // Replaced alert/confirm with modal for consistency, although the original used prompt
                     const userPass = prompt('Enter password to edit this item:');
                     if (userPass === password) {
                         // Find the index of the item to edit
@@ -687,7 +714,16 @@
                             editItemModal.style.display = 'flex'; // Show the modal (use flex to center)
                         }
                     } else {
-                        alert('Wrong password!');
+                        // Replaced alert with console log and message for consistency
+                        console.error('Wrong password entered for editing.');
+                        const messageBox = document.createElement('div');
+                        messageBox.className = 'modal-message';
+                        messageBox.innerHTML = `
+                            <p>Wrong password!</p>
+                            <button class="modal-message-close">Close</button>
+                        `;
+                        document.body.appendChild(messageBox);
+                        messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                     }
                 };
 
@@ -697,7 +733,16 @@
                     if (userPass === password) {
                         const quantityToAdd = parseInt(prompt('Enter quantity to add:', 0), 10); // Prompt for quantity to ADD
                         if (isNaN(quantityToAdd) || quantityToAdd < 0) {
-                            alert('Invalid quantity. Please enter a positive number.');
+                            // Replaced alert with console log and message for consistency
+                            console.error('Invalid quantity. Please enter a positive number.');
+                            const messageBox = document.createElement('div');
+                            messageBox.className = 'modal-message';
+                            messageBox.innerHTML = `
+                                <p>Invalid quantity. Please enter a positive number.</p>
+                                <button class="modal-message-close">Close</button>
+                            `;
+                            document.body.appendChild(messageBox);
+                            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                             return;
                         }
 
@@ -707,7 +752,16 @@
                         saveItems();
                         refreshUI();
                     } else {
-                        alert('Wrong password!');
+                        // Replaced alert with console log and message for consistency
+                        console.error('Wrong password entered for editing quantity.');
+                        const messageBox = document.createElement('div');
+                        messageBox.className = 'modal-message';
+                        messageBox.innerHTML = `
+                            <p>Wrong password!</p>
+                            <button class="modal-message-close">Close</button>
+                        `;
+                        document.body.appendChild(messageBox);
+                        messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                     }
                 };
 
@@ -719,7 +773,16 @@
                         saveItems();
                         refreshUI();
                     } else {
-                        alert('Wrong password!');
+                        // Replaced alert with console log and message for consistency
+                        console.error('Wrong password entered for deleting item.');
+                        const messageBox = document.createElement('div');
+                        messageBox.className = 'modal-message';
+                        messageBox.innerHTML = `
+                            <p>Wrong password!</p>
+                            <button class="modal-message-close">Close</button>
+                        `;
+                        document.body.appendChild(messageBox);
+                        messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                     }
                 };
 
@@ -876,17 +939,44 @@
             const price = parseFloat(document.getElementById('price').value); // Get price from add form
 
             if (!name || !brand || isNaN(totalQuantity) || isNaN(sold) || isNaN(price)) {
-                alert('Please fill all fields correctly.');
+                // Replaced alert with console log and message for consistency
+                console.error('Please fill all fields correctly.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>Please fill all fields correctly.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                 return;
             }
             if (sold > totalQuantity) {
-                alert('Sold quantity cannot be greater than total quantity.');
+                // Replaced alert with console log and message for consistency
+                console.error('Sold quantity cannot be greater than total quantity.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>Sold quantity cannot be greater than total quantity.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                 return;
             }
 
             // Check if item name already exists (case-insensitive)
             if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
-                alert('An item with this name already exists. Please use a different name or duplicate it later.');
+                // Replaced alert with console log and message for consistency
+                console.error('An item with this name already exists.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>An item with this name already exists. Please use a different name or duplicate it later.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                 return;
             }
 
@@ -951,7 +1041,15 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
-            alert('Inventory data downloaded as ZIP!');
+            // Replaced alert with console log and message for consistency
+            const messageBox = document.createElement('div');
+            messageBox.className = 'modal-message';
+            messageBox.innerHTML = `
+                <p>Inventory data downloaded as ZIP!</p>
+                <button class="modal-message-close">Close</button>
+            `;
+            document.body.appendChild(messageBox);
+            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
         };
 
         // Import Inventory (JSON)
@@ -978,22 +1076,71 @@
                             );
 
                             if (isValid) {
-                                const confirmImport = confirm("Importing will overwrite your current inventory. Are you sure?");
-                                if (confirmImport) {
+                                // Replaced confirm with custom modal for consistency
+                                const customConfirm = document.createElement('div');
+                                customConfirm.className = 'modal-message';
+                                customConfirm.innerHTML = `
+                                    <p>Importing will overwrite your current inventory. Are you sure?</p>
+                                    <button id="confirmYes">Yes</button>
+                                    <button id="confirmNo">No</button>
+                                `;
+                                document.body.appendChild(customConfirm);
+
+                                document.getElementById('confirmYes').onclick = () => {
                                     items = importedData;
                                     saveItems();
                                     refreshUI();
-                                    alert('Inventory data imported successfully!');
-                                }
+                                    customConfirm.remove();
+                                    // Replaced alert with console log and message for consistency
+                                    const messageBox = document.createElement('div');
+                                    messageBox.className = 'modal-message';
+                                    messageBox.innerHTML = `
+                                        <p>Inventory data imported successfully!</p>
+                                        <button class="modal-message-close">Close</button>
+                                    `;
+                                    document.body.appendChild(messageBox);
+                                    messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+                                };
+
+                                document.getElementById('confirmNo').onclick = () => {
+                                    customConfirm.remove();
+                                };
+
                             } else {
-                                alert('Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties (name, brand, totalQuantity, sold, price, dateAdded).');
+                                // Replaced alert with console log and message for consistency
+                                console.error('Invalid JSON structure for import.');
+                                const messageBox = document.createElement('div');
+                                messageBox.className = 'modal-message';
+                                messageBox.innerHTML = `
+                                    <p>Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties (name, brand, totalQuantity, sold, price, dateAdded).</p>
+                                    <button class="modal-message-close">Close</button>
+                                `;
+                                document.body.appendChild(messageBox);
+                                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                             }
                         } else {
-                            alert('Invalid JSON file. Expected an array of inventory items.');
+                            // Replaced alert with console log and message for consistency
+                            console.error('Invalid JSON file. Expected an array of inventory items.');
+                            const messageBox = document.createElement('div');
+                            messageBox.className = 'modal-message';
+                            messageBox.innerHTML = `
+                                <p>Invalid JSON file. Expected an array of inventory items.</p>
+                                <button class="modal-message-close">Close</button>
+                            `;
+                            document.body.appendChild(messageBox);
+                            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                         }
                     } catch (error) {
-                        alert('Error parsing JSON file. Please ensure it is a valid JSON.');
-                        console.error('Error importing JSON:', error);
+                        // Replaced alert with console log and message for consistency
+                        console.error('Error parsing JSON file. Please ensure it is a valid JSON.', error);
+                        const messageBox = document.createElement('div');
+                        messageBox.className = 'modal-message';
+                        messageBox.innerHTML = `
+                            <p>Error parsing JSON file. Please ensure it is a valid JSON.</p>
+                            <button class="modal-message-close">Close</button>
+                        `;
+                        document.body.appendChild(messageBox);
+                        messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                     }
                 };
                 reader.readAsText(file);
@@ -1032,8 +1179,8 @@
             const pdfTableBody = pdfTable.querySelector('tbody');
             let totalReportValue = 0;
 
-            // Populate the table with only the desired data
-            items.forEach(item => {
+            // Populate the table with only the *filtered* items (using filteredItemsForDisplay)
+            filteredItemsForDisplay.forEach(item => {
                 const inStockCount = item.totalQuantity - item.sold;
                 const dateAddedFormatted = new Date(item.dateAdded).toLocaleDateString();
                 const itemValue = inStockCount * (item.price || 0); // Calculate value for in-stock items
@@ -1094,7 +1241,17 @@
 
             const itemIndex = parseInt(editItemId.value, 10);
             if (isNaN(itemIndex) || itemIndex < 0 || itemIndex >= items.length) {
-                alert('Error: Item not found for editing.');
+                // Replaced alert with console log and message for consistency
+                console.error('Error: Item not found for editing.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>Error: Item not found for editing.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+
                 editItemModal.style.display = 'none';
                 return;
             }
@@ -1109,11 +1266,29 @@
 
             // Basic validation
             if (!newName || !newBrand || isNaN(newTotalQty) || isNaN(newSold)) { // Removed newPrice and newDateAdded validation
-                alert('Please fill all fields correctly.');
+                // Replaced alert with console log and message for consistency
+                console.error('Please fill all fields correctly.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>Please fill all fields correctly.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                 return;
             }
             if (newSold > newTotalQty) {
-                alert('Sold quantity cannot be greater than total quantity.');
+                // Replaced alert with console log and message for consistency
+                console.error('Sold quantity cannot be greater than total quantity.');
+                const messageBox = document.createElement('div');
+                messageBox.className = 'modal-message';
+                messageBox.innerHTML = `
+                    <p>Sold quantity cannot be greater than total quantity.</p>
+                    <button class="modal-message-close">Close</button>
+                `;
+                document.body.appendChild(messageBox);
+                messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                 return;
             }
 
@@ -1127,7 +1302,15 @@
             saveItems();
             refreshUI();
             editItemModal.style.display = 'none'; // Hide the modal
-            alert('Item updated successfully!');
+            // Replaced alert with console log and message for consistency
+            const messageBox = document.createElement('div');
+            messageBox.className = 'modal-message';
+            messageBox.innerHTML = `
+                <p>Item updated successfully!</p>
+                <button class="modal-message-close">Close</button>
+            `;
+            document.body.appendChild(messageBox);
+            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
         };
 
         // Initial load
