@@ -125,6 +125,10 @@
     background: var(--primary);
     color: white;
   }
+  button.edit-qty { /* New style for edit quantity button */
+    background: #009688; /* A teal color */
+    color: white;
+  }
   button.delete {
     background: var(--danger);
     color: white;
@@ -281,6 +285,20 @@
       flex-direction: column;
       align-items: stretch;
     }
+    /* Make buttons stack vertically for smaller screens */
+    .item-actions button {
+      display: block;
+      width: 100%;
+      margin-bottom: 5px; /* Add some space between stacked buttons */
+      margin-left: 0;
+      margin-right: 0;
+    }
+    .item-actions {
+      display: flex; /* Override display: flex; to allow stacking */
+      flex-direction: column;
+      gap: 5px; /* Ensure consistent spacing */
+      align-items: stretch;
+    }
   }
 
   .container h1{
@@ -300,6 +318,77 @@
     body {
       margin: 0.5in !important; /* Adjust as needed */
     }
+  }
+
+  /* Styles for the Edit Item Modal */
+  #editItemModal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1001; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+
+  #editItemModal > div {
+      background-color: var(--bg-light); /* Use theme variable for background */
+      margin: 10% auto; /* 10% from the top and centered */
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be more or less, depending on screen size */
+      max-width: 500px; /* Max width for larger screens */
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  body.dark #editItemModal > div {
+      background-color: var(--bg-dark); /* Dark mode background */
+      color: var(--text-dark);
+  }
+
+  #editItemModal input[type="text"],
+  #editItemModal input[type="number"] {
+      width: calc(100% - 12px); /* Account for padding */
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: var(--bg-light); /* Use theme variable for input background */
+      color: var(--text-light); /* Use theme variable for input text color */
+  }
+
+  body.dark #editItemModal input[type="text"],
+  body.dark #editItemModal input[type="number"] {
+      background-color: #333; /* Darker input background for dark mode */
+      border-color: #555;
+      color: var(--text-dark);
+  }
+
+  .close-button {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+  }
+
+  .close-button:hover,
+  .close-button:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+  }
+
+  body.dark .close-button {
+      color: #eee;
+  }
+
+  body.dark .close-button:hover,
+  body.dark .close-button:focus {
+      color: white;
   }
 </style>
 </head>
@@ -382,11 +471,44 @@
       <h3>Monthly Sold Items</h3>
       <canvas id="monthlySoldBarChart" aria-label="Bar chart showing items sold per month" role="img"></canvas>
     </div>
-    <div class="chart-card">
-      <h3>Sold Items Distribution</h3>
-      <canvas id="soldItemsPieChart" aria-label="Pie chart showing distribution of sold items" role="img"></canvas>
-    </div>
+   <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <h2 class="text-2xl font-semibold mb-4">Top 20 Overall Highest Sold Items</h2>
+                <canvas id="soldItemsPieChart"></canvas>
+            </div>
   </section>
+</div>
+
+<div id="editItemModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+  <div style="background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    <span class="close-button" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+    <h2 style="text-align: center; margin-top: 0; font-family: 'ABeeZee', sans-serif;">Edit Item Details</h2>
+    <form id="editItemForm">
+      <input type="hidden" id="editItemId"> <p>
+        <label for="editItemName" style="display: block; margin-bottom: 5px;">Item Name:</label>
+        <input type="text" id="editItemName" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      </p>
+      <p>
+        <label for="editBrand" style="display: block; margin-bottom: 5px;">Brand:</label>
+        <input type="text" id="editBrand" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      </p>
+      <p>
+        <label for="editTotalQuantity" style="display: block; margin-bottom: 5px;">Total Quantity:</label>
+        <input type="number" id="editTotalQuantity" min="1" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      </p>
+      <p>
+        <label for="editSold" style="display: block; margin-bottom: 5px;">Sold:</label>
+        <input type="number" id="editSold" min="0" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px;">
+      </p>
+      <p>
+        <label for="editPrice" style="display: block; margin-bottom: 5px;">Price (per unit Rs):</label>
+        <input type="number" id="editPrice" min="0" step="0.01" required style="width: calc(100% - 12px); padding: 8px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px;">
+      </p>
+      <div style="text-align: right;">
+        <button type="submit" style="background-color: var(--primary); color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; margin-right: 10px;">Save Changes</button>
+        <button type="button" id="cancelEdit" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem;">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <footer style="background-color: #003366; color: white; text-align: center; padding: 20px 0; font-family: 'Poppins', sans-serif;">
@@ -398,221 +520,250 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
-  // Elements references
-  const addItemForm = document.getElementById('addItemForm');
-  const itemTableBody = document.getElementById('itemTableBody');
-  const totalItemsCount = document.getElementById('totalItemsCount');
-  const totalQuantityCount = document.getElementById('totalQuantityCount');
-  const totalSoldCount = document.getElementById('totalSoldCount');
-  const totalInStockCount = document.getElementById('totalInStockCount');
-  const totalValueCount = document.getElementById('totalValueCount');
-  const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
-  const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
-  const modeToggleBtn = document.getElementById('modeToggleBtn');
+const addItemForm = document.getElementById('addItemForm');
+const itemTableBody = document.getElementById('itemTableBody');
+const totalItemsCount = document.getElementById('totalItemsCount');
+const totalQuantityCount = document.getElementById('totalQuantityCount');
+const totalSoldCount = document.getElementById('totalSoldCount');
+const totalInStockCount = document.getElementById('totalInStockCount');
+const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue
+const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
+const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
+const modeToggleBtn = document.getElementById('modeToggleBtn');
 
-  // Filter inputs
-  const filterNameInput = document.getElementById('filterName');
-  const filterBrandInput = document.getElementById('filterBrand');
-  const filterStatusSelect = document.getElementById('filterStatus');
+// Filter inputs
+const filterNameInput = document.getElementById('filterName');
+const filterBrandInput = document.getElementById('filterBrand');
+const filterStatusSelect = document.getElementById('filterStatus');
 
-  // New button references
-  const downloadZipBtn = document.getElementById('downloadZipBtn');
-  const importJsonFile = document.getElementById('importJsonFile');
-  const importJsonBtn = document.getElementById('importJsonBtn');
-  const printPdfBtn = document.getElementById('printPdfBtn');
+// New button references
+const downloadZipBtn = document.getElementById('downloadZipBtn');
+const importJsonFile = document.getElementById('importJsonFile');
+const importJsonBtn = document.getElementById('importJsonBtn');
+const printPdfBtn = document.getElementById('printPdfBtn');
+
+// Edit Item Modal elements
+const editItemModal = document.getElementById('editItemModal');
+const editItemForm = document.getElementById('editItemForm');
+const closeButton = editItemModal.querySelector('.close-button');
+const cancelEditButton = document.getElementById('cancelEdit');
+
+const editItemId = document.getElementById('editItemId');
+const editItemName = document.getElementById('editItemName');
+const editBrand = document.getElementById('editBrand');
+const editTotalQuantity = document.getElementById('editTotalQuantity');
+const editSold = document.getElementById('editSold');
+const editPrice = document.getElementById('editPrice');
 
 
-  // Data storage
-  let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
+// Data storage
+let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
 
-  // Password for editing/deleting
-  const password = '789632';
+// Password for editing/deleting
+const password = '789632';
 
-  // Chart instances
-  let monthlySoldBarChart = null;
-  let soldItemsPieChart = null;
+// Chart instances
+let monthlySoldBarChart = null;
+let soldItemsPieChart = null;
 
-  // Save items to localStorage
-  function saveItems() {
-    localStorage.setItem('inventoryItems', JSON.stringify(items));
+// Save items to localStorage
+function saveItems() {
+  localStorage.setItem('inventoryItems', JSON.stringify(items));
+}
+
+// Filter & refresh UI function
+function refreshUI() {
+  // Clear table
+  itemTableBody.innerHTML = '';
+
+  // Get filters
+  const nameFilter = filterNameInput.value.trim().toLowerCase();
+  const brandFilter = filterBrandInput.value.trim().toLowerCase();
+  const statusFilter = filterStatusSelect.value;
+
+  // First, filter by name and brand
+  let displayItems = items.filter(item => {
+    const matchesName = item.name.toLowerCase().includes(nameFilter);
+    const matchesBrand = item.brand.toLowerCase().includes(brandFilter);
+    return matchesName && matchesBrand;
+  });
+
+  // Then, apply status filtering (inStock/soldOut/lowStock) or sorting (highSold/lowSold)
+  if (statusFilter === 'inStock') {
+    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) > 0);
+  } else if (statusFilter === 'soldOut') {
+    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
+  } else if (statusFilter === 'lowStock') { // Low Stock filter logic
+    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 5);
+  } else if (statusFilter === 'highSold') {
+    displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
+  } else if (statusFilter === 'lowSold') {
+    displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
   }
 
-  // Filter & refresh UI function
-  function refreshUI() {
-    // Clear table
-    itemTableBody.innerHTML = '';
+  displayItems.forEach(item => {
+    const tr = document.createElement('tr');
 
-    // Get filters
-    const nameFilter = filterNameInput.value.trim().toLowerCase();
-    const brandFilter = filterBrandInput.value.trim().toLowerCase();
-    const statusFilter = filterStatusSelect.value;
+    // In stock count
+    const inStockCount = item.totalQuantity - item.sold;
 
-    // First, filter by name and brand
-    let displayItems = items.filter(item => {
-      const matchesName = item.name.toLowerCase().includes(nameFilter);
-      const matchesBrand = item.brand.toLowerCase().includes(brandFilter);
-      return matchesName && matchesBrand;
-    });
-
-    // Then, apply status filtering (inStock/soldOut/lowStock) or sorting (highSold/lowSold)
-    if (statusFilter === 'inStock') {
-      displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) > 0);
-    } else if (statusFilter === 'soldOut') {
-      displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
-    } else if (statusFilter === 'lowStock') { // NEW: Low Stock filter logic
-      displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 5);
-    } else if (statusFilter === 'highSold') {
-      displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
-    } else if (statusFilter === 'lowSold') {
-      displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
+    // Add 'low-stock' class if item is low in stock
+    if (inStockCount <= 5) {
+      tr.classList.add('low-stock');
     }
 
-    displayItems.forEach(item => {
-      const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.name}</td>
+      <td>${item.brand}</td>
+      <td>${item.totalQuantity}</td>
+      <td>
+        <button class="sold-dec" aria-label="Decrease sold count for ${item.name}" ${item.sold <= 0 ? 'disabled' : ''}>-</button>
+        ${item.sold}
+        <button class="sold-inc" aria-label="Increase sold count for ${item.name}" ${inStockCount <= 0 ? 'disabled' : ''}>+</button>
+      </td>
+      <td>${inStockCount}</td>
+      <td>${new Date(item.dateAdded).toLocaleDateString()}</td>
+      <td class="item-actions">
+        <button class="edit" aria-label="Edit all details for ${item.name}">Edit All</button>
+        <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Edit Qty</button>
+        <button class="delete" aria-label="Delete ${item.name}">Delete</button>
+        <button class="duplicate" aria-label="Duplicate ${item.name}">Duplicate</button>
+      </td>
+    `;
 
-      // In stock count
-      const inStockCount = item.totalQuantity - item.sold;
-
-      // NEW: Add 'low-stock' class if item is low in stock
-      if (inStockCount <= 5) {
-        tr.classList.add('low-stock');
-      }
-
-      tr.innerHTML = `
-        <td>${item.name}</td>
-        <td>${item.brand}</td>
-        <td>${item.totalQuantity}</td>
-        <td>
-          <button class="sold-dec" aria-label="Decrease sold count for ${item.name}" ${item.sold <= 0 ? 'disabled' : ''}>-</button>
-          ${item.sold}
-          <button class="sold-inc" aria-label="Increase sold count for ${item.name}" ${inStockCount <= 0 ? 'disabled' : ''}>+</button>
-        </td>
-        <td>${inStockCount}</td>
-        <td>${new Date(item.dateAdded).toLocaleDateString()}</td>
-        <td>
-          <button class="edit" aria-label="Edit ${item.name}">Edit</button>
-          <button class="delete" aria-label="Delete ${item.name}">Delete</button>
-          <button class="duplicate" aria-label="Duplicate ${item.name}">Duplicate</button>
-        </td>
-      `;
-
-      // Sold decrement
-      tr.querySelector('.sold-dec').onclick = () => {
-        if (item.sold > 0) {
-          item.sold--;
-          saveItems();
-          refreshUI();
-        }
-      };
-      // Sold increment
-      tr.querySelector('.sold-inc').onclick = () => {
-        if (inStockCount > 0) {
-          item.sold++;
-          saveItems();
-          refreshUI();
-        }
-      };
-
-      // Edit button with password prompt
-      tr.querySelector('.edit').onclick = () => {
-        const userPass = prompt('Enter password to edit this item:');
-        if (userPass === password) {
-          const newName = prompt('Enter new item name:', item.name);
-          if (!newName) return alert('Name cannot be empty.');
-          const newBrand = prompt('Enter new brand:', item.brand);
-          if (!newBrand) return alert('Brand cannot be empty.');
-          const newTotalQty = parseInt(prompt('Enter new total quantity:', item.totalQuantity), 10);
-          if (isNaN(newTotalQty) || newTotalQty < 0) return alert('Invalid total quantity.');
-          const newSold = parseInt(prompt('Enter new sold quantity:', item.sold), 10);
-          if (isNaN(newSold) || newSold < 0 || newSold > newTotalQty) return alert('Invalid sold quantity.');
-          const newPrice = parseFloat(prompt('Enter new price per unit:', item.price));
-          if (isNaN(newPrice) || newPrice < 0) return alert('Invalid price.');
-
-          item.name = newName;
-          item.brand = newBrand;
-          item.totalQuantity = newTotalQty;
-          item.sold = newSold;
-          item.price = newPrice;
-
-          saveItems();
-          refreshUI();
-        } else {
-          alert('Wrong password!');
-        }
-      };
-
-      // Delete button with password prompt
-      tr.querySelector('.delete').onclick = () => {
-        const userPass = prompt('Enter password to delete this item:');
-        if (userPass === password) {
-          items = items.filter(i => i !== item);
-          saveItems();
-          refreshUI();
-        } else {
-          alert('Wrong password!');
-        }
-      };
-
-      // Duplicate item button
-      tr.querySelector('.duplicate').onclick = () => {
-        let newName = item.name;
-        let counter = 0;
-        while (items.find(i => i.name.toLowerCase() === newName.toLowerCase())) {
-          counter++;
-          newName = item.name + ` - Copy (${counter})`;
-        }
-        items.push({
-          ...item,
-          name: newName,
-          dateAdded: new Date().toISOString()
-        });
+    // Sold decrement
+    tr.querySelector('.sold-dec').onclick = () => {
+      if (item.sold > 0) {
+        item.sold--;
         saveItems();
         refreshUI();
-      };
+      }
+    };
+    // Sold increment
+    tr.querySelector('.sold-inc').onclick = () => {
+      if (inStockCount > 0) {
+        item.sold++;
+        saveItems();
+        refreshUI();
+      }
+    };
 
-      itemTableBody.appendChild(tr);
-    });
+    // Edit All button with password prompt (opens modal)
+    tr.querySelector('.edit').onclick = () => {
+      const userPass = prompt('Enter password to edit this item:');
+      if (userPass === password) {
+        // Find the index of the item to edit
+        const itemIndex = items.findIndex(i => i === item);
+        if (itemIndex > -1) {
+          // Populate the modal fields with current item data
+          editItemId.value = itemIndex; // Store the index
+          editItemName.value = item.name;
+          editBrand.value = item.brand;
+          editTotalQuantity.value = item.totalQuantity;
+          editSold.value = item.sold;
+          editPrice.value = item.price;
+          editItemModal.style.display = 'block'; // Show the modal
+        }
+      } else {
+        alert('Wrong password!');
+      }
+    };
 
-    updateDashboard();
-    updateCharts();
-  }
+    // Edit Total Quantity button with password prompt
+    tr.querySelector('.edit-qty').onclick = () => {
+      const userPass = prompt('Enter password to edit quantity:');
+      if (userPass === password) {
+        const newTotalQty = parseInt(prompt('Enter new total quantity:', item.totalQuantity), 10);
+        if (isNaN(newTotalQty) || newTotalQty < 0) {
+          alert('Invalid total quantity. Please enter a positive number.');
+          return;
+        }
+        if (newTotalQty < item.sold) {
+          alert('New total quantity cannot be less than sold quantity.');
+          return;
+        }
 
-  // Dashboard stats
-  function updateDashboard() {
-    const totalItems = items.length;
-    const totalQuantity = items.reduce((acc, i) => acc + i.totalQuantity, 0);
-    const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
-    const totalInStock = totalQuantity - totalSold;
-    const totalValue = items.reduce((acc, i) => acc + i.price * (i.totalQuantity - i.sold), 0);
+        item.totalQuantity = newTotalQty;
+        saveItems();
+        refreshUI();
+      } else {
+        alert('Wrong password!');
+      }
+    };
 
-    totalItemsCount.textContent = totalItems;
-    totalQuantityCount.textContent = totalQuantity;
-    totalSoldCount.textContent = totalSold;
-    totalInStockCount.textContent = totalInStock;
-    totalValueCount.textContent = `Rs ${totalValue.toFixed(2)}`;
-  }
+    // Delete button with password prompt
+    tr.querySelector('.delete').onclick = () => {
+      const userPass = prompt('Enter password to delete this item:');
+      if (userPass === password) {
+        items = items.filter(i => i !== item);
+        saveItems();
+        refreshUI();
+      } else {
+        alert('Wrong password!');
+      }
+    };
 
-  // Charts update
-  function updateCharts() {
-    // Monthly Sold Bar Chart
+    // Duplicate item button
+    tr.querySelector('.duplicate').onclick = () => {
+      let newName = item.name;
+      let counter = 0;
+      while (items.find(i => i.name.toLowerCase() === newName.toLowerCase())) {
+        counter++;
+        newName = item.name + ` - Copy (${counter})`;
+      }
+      items.push({
+        ...item,
+        name: newName,
+        dateAdded: new Date().toISOString()
+      });
+      saveItems();
+      refreshUI();
+    };
+
+    itemTableBody.appendChild(tr);
+  });
+
+  updateDashboard();
+  updateCharts();
+}
+
+// Dashboard stats
+function updateDashboard() {
+  const totalItems = items.length;
+  const totalQuantity = items.reduce((acc, i) => acc + i.totalQuantity, 0);
+  const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
+  const totalInStock = totalQuantity - totalSold;
+  // Changed: Calculate total revenue from sold items
+  const totalRevenueFromSold = items.reduce((acc, i) => acc + i.price * i.sold, 0);
+
+  totalItemsCount.textContent = totalItems;
+  totalQuantityCount.textContent = totalQuantity;
+  totalSoldCount.textContent = totalSold;
+  totalInStockCount.textContent = totalInStock;
+  totalValueCount.textContent = `Rs ${totalRevenueFromSold.toFixed(2)}`; // Display as "Total Revenue"
+}
+
+// Charts update
+function updateCharts() {
+    // Monthly Sold Bar Chart (existing code)
     const monthlyData = {};
 
     items.forEach(item => {
-      if (item.sold > 0) {
-        const d = new Date(item.dateAdded);
-        if (isNaN(d)) return;
-        const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
-        if (!monthlyData[key]) monthlyData[key] = 0;
-        monthlyData[key] += item.sold;
-      }
+        if (item.sold > 0) {
+            const d = new Date(item.dateAdded);
+            if (isNaN(d)) return;
+            const key = `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}`;
+            if (!monthlyData[key]) monthlyData[key] = 0;
+            monthlyData[key] += item.sold;
+        }
     });
 
     const months = Object.keys(monthlyData).sort();
 
     const monthLabels = months.map(m => {
-      const [year, month] = m.split('-');
-      const date = new Date(year, month - 1);
-      return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        const [year, month] = m.split('-');
+        const date = new Date(year, month - 1);
+        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
     });
 
     const soldCounts = months.map(m => monthlyData[m]);
@@ -620,242 +771,328 @@
     if (monthlySoldBarChart) monthlySoldBarChart.destroy();
 
     monthlySoldBarChart = new Chart(monthlySoldBarChartCtx, {
-      type: 'bar',
-      data: {
-        labels: monthLabels,
-        datasets: [{
-          label: 'Items Sold',
-          data: soldCounts,
-          backgroundColor: 'rgba(0, 123, 255, 0.7)',
-          borderColor: 'rgba(0, 123, 255, 1)',
-          borderWidth: 1,
-          borderRadius: 4,
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true, stepSize: 1 },
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Items Sold',
+                data: soldCounts,
+                backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                borderColor: 'rgba(0, 123, 255, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
         },
-        plugins: {
-          legend: { display: false },
-          tooltip: { enabled: true }
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, stepSize: 1 },
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            }
         }
-      }
     });
 
-    // Pie Chart: Sold items distribution
-    const soldItemsData = {};
+    // Pie Chart: Top 20 Most Sold Items in the Last 7 Days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0); // Set to start of the day 7 days ago
+
+    const weeklySoldItemsData = {};
+
     items.forEach(item => {
-      if (item.sold > 0) {
-        soldItemsData[item.name] = (soldItemsData[item.name] || 0) + item.sold;
-      }
+        if (item.sold > 0) {
+            const dateAdded = new Date(item.dateAdded);
+            if (dateAdded >= sevenDaysAgo) {
+                weeklySoldItemsData[item.name] = (weeklySoldItemsData[item.name] || 0) + item.sold;
+            }
+        }
     });
 
-    const pieLabels = Object.keys(soldItemsData);
-    const pieValues = Object.values(soldItemsData);
+    // Convert to array and sort by sold quantity (descending)
+    const sortedWeeklySoldItems = Object.entries(weeklySoldItemsData)
+        .sort(([, soldA], [, soldB]) => soldB - soldA);
+
+    // Get top 20
+    const top20WeeklySoldItems = sortedWeeklySoldItems.slice(0, 20);
+
+    const pieLabels = top20WeeklySoldItems.map(entry => entry[0]);
+    const pieValues = top20WeeklySoldItems.map(entry => entry[1]);
     const pieColors = pieLabels.map(() => `hsl(${Math.random() * 360}, 70%, 60%)`);
 
     if (soldItemsPieChart) soldItemsPieChart.destroy();
 
     soldItemsPieChart = new Chart(soldItemsPieChartCtx, {
-      type: 'pie',
-      data: {
-        labels: pieLabels,
-        datasets: [{
-          data: pieValues,
-          backgroundColor: pieColors,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: { enabled: true }
-        }
-      }
-    });
-  }
-
-  // Add item form submit handler
-  addItemForm.onsubmit = (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById('itemName').value.trim();
-    const brand = document.getElementById('brand').value.trim();
-    const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
-    const sold = parseInt(document.getElementById('sold').value, 10);
-    const price = parseFloat(document.getElementById('price').value);
-
-    if (!name || !brand || isNaN(totalQuantity) || isNaN(sold) || isNaN(price)) {
-      alert('Please fill all fields correctly.');
-      return;
-    }
-    if (sold > totalQuantity) {
-      alert('Sold quantity cannot be greater than total quantity.');
-      return;
-    }
-
-    // Check if item name already exists (case-insensitive)
-    if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
-      alert('An item with this name already exists. Please use a different name or duplicate it later.');
-      return;
-    }
-
-    const newItem = {
-      name,
-      brand,
-      totalQuantity,
-      sold,
-      price,
-      dateAdded: new Date().toISOString()
-    };
-
-    items.push(newItem);
-    saveItems();
-    refreshUI();
-
-    addItemForm.reset();
-  };
-
-  // Filters event listeners
-  filterNameInput.oninput = refreshUI;
-  filterBrandInput.oninput = refreshUI;
-  filterStatusSelect.onchange = refreshUI;
-
-  // Dark mode toggle
-  function loadDarkModeSetting() {
-    if(localStorage.getItem('darkMode') === 'true') {
-      document.body.classList.add('dark');
-      modeToggleBtn.textContent = '☀️';
-    } else {
-      document.body.classList.remove('dark');
-      modeToggleBtn.textContent = '🌙';
-    }
-  }
-  modeToggleBtn.onclick = () => {
-    document.body.classList.toggle('dark');
-    const darkModeOn = document.body.classList.contains('dark');
-    localStorage.setItem('darkMode', darkModeOn);
-    modeToggleBtn.textContent = darkModeOn ? '☀️' : '🌙';
-  };
-
-  // --- NEW FUNCTIONALITY ---
-
-  // Download Inventory (ZIP)
-  downloadZipBtn.onclick = async () => {
-    const zip = new JSZip();
-    const inventoryJson = JSON.stringify(items, null, 2); // Pretty print JSON
-
-    zip.file("inventory_data.json", inventoryJson);
-
-    // Generate the ZIP file
-    const content = await zip.generateAsync({ type: "blob" });
-
-    // Create a download link
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(content);
-    link.download = `inventory_backup_${new Date().toISOString().slice(0,10)}.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(link.href);
-    alert('Inventory data downloaded as ZIP!');
-  };
-
-  // Import Inventory (JSON)
-  importJsonBtn.onclick = () => {
-    importJsonFile.click(); // Trigger the hidden file input click
-  };
-
-  importJsonFile.onchange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const importedData = JSON.parse(e.target.result);
-          if (Array.isArray(importedData)) {
-            // Basic validation for imported data structure
-            const isValid = importedData.every(item =>
-              typeof item.name === 'string' &&
-              typeof item.brand === 'string' &&
-              typeof item.totalQuantity === 'number' &&
-              typeof item.sold === 'number' &&
-              typeof item.price === 'number' &&
-              typeof item.dateAdded === 'string'
-            );
-
-            if (isValid) {
-              const confirmImport = confirm("Importing will overwrite your current inventory. Are you sure?");
-              if (confirmImport) {
-                items = importedData;
-                saveItems();
-                refreshUI();
-                alert('Inventory data imported successfully!');
-              }
-            } else {
-              alert('Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties.');
+        type: 'pie',
+        data: {
+            labels: pieLabels,
+            datasets: [{
+                data: pieValues,
+                backgroundColor: pieColors,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true }
             }
-          } else {
-            alert('Invalid JSON file. Expected an array of inventory items.');
-          }
-        } catch (error) {
-          alert('Error parsing JSON file. Please ensure it is a valid JSON.');
-          console.error('Error importing JSON:', error);
         }
-      };
-      reader.readAsText(file);
-    }
+    });
+}
+
+// Add item form submit handler
+addItemForm.onsubmit = (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById('itemName').value.trim();
+  const brand = document.getElementById('brand').value.trim();
+  const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
+  const sold = parseInt(document.getElementById('sold').value, 10);
+  const price = parseFloat(document.getElementById('price').value);
+
+  if (!name || !brand || isNaN(totalQuantity) || isNaN(sold) || isNaN(price)) {
+    alert('Please fill all fields correctly.');
+    return;
+  }
+  if (sold > totalQuantity) {
+    alert('Sold quantity cannot be greater than total quantity.');
+    return;
+  }
+
+  // Check if item name already exists (case-insensitive)
+  if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
+    alert('An item with this name already exists. Please use a different name or duplicate it later.');
+    return;
+  }
+
+  const newItem = {
+    name,
+    brand,
+    totalQuantity,
+    sold,
+    price,
+    dateAdded: new Date().toISOString()
   };
 
-// In your existing <script> block, locate the printPdfBtn.onclick function.
-// Replace its content with the following:
+  items.push(newItem);
+  saveItems();
+  refreshUI();
 
-printPdfBtn.onclick = () => {
-    // Target only the itemTable for PDF generation
-    const element = document.getElementById('itemTable');
-
-    // Temporarily hide elements that should *not* be in the PDF.
-    // In this case, we only want the table, so we don't need to hide other sections.
-    // The previous approach of hiding elements within the container is now irrelevant
-    // because we are only selecting the table.
-
-    // No need to restore original title if we are just printing the table,
-    // but if you want a title, you'd prepend it to the element being printed.
-    // For now, let's just make sure the table has a clear heading.
-
-    // Create a temporary div to hold the table and a report title for the PDF
-    const printContent = document.createElement('div');
-    printContent.style.padding = '10px'; // Add some padding around the content
-    printContent.innerHTML = `
-        <h1 style="text-align: center; margin-bottom: 20px;">Inventory Items Report - ${new Date().toLocaleDateString()}</h1>
-        ${element.outerHTML}
-    `;
-
-    // Important: Temporarily remove action buttons from the cloned table in printContent
-    // This needs to be done on the `printContent`'s version of the table.
-    const clonedTable = printContent.querySelector('#itemTable');
-    if (clonedTable) {
-        clonedTable.querySelectorAll('th:last-child, td:last-child').forEach(cell => {
-            cell.style.display = 'none'; // Hide the Actions column
-        });
-    }
-
-    html2pdf().from(printContent).set({
-        margin: [0.5, 0.5, 0.5, 0.5], // Adjust margins as desired
-        filename: `inventory_items_report_${new Date().toISOString().slice(0, 10)}.pdf`,
-        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-    }).save().then(() => {
-        // No elements were hidden from the main page, so no restoration needed.
-        // The temporary `printContent` div is gone after .save()
-    });
+  addItemForm.reset();
 };
 
-  // Initial load
-  loadDarkModeSetting();
+// Filters event listeners
+filterNameInput.oninput = refreshUI;
+filterBrandInput.oninput = refreshUI;
+filterStatusSelect.onchange = refreshUI;
+
+// Dark mode toggle
+function loadDarkModeSetting() {
+  if(localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark');
+    modeToggleBtn.textContent = '☀️';
+  } else {
+    document.body.classList.remove('dark');
+    modeToggleBtn.textContent = '🌙';
+  }
+}
+modeToggleBtn.onclick = () => {
+  document.body.classList.toggle('dark');
+  const darkModeOn = document.body.classList.contains('dark');
+  localStorage.setItem('darkMode', darkModeOn);
+  modeToggleBtn.textContent = darkModeOn ? '☀️' : '🌙';
+};
+
+// --- NEW FUNCTIONALITY ---
+
+// Download Inventory (ZIP)
+downloadZipBtn.onclick = async () => {
+  const zip = new JSZip();
+  const inventoryJson = JSON.stringify(items, null, 2); // Pretty print JSON
+
+  zip.file("inventory_data.json", inventoryJson);
+
+  // Generate the ZIP file
+  const content = await zip.generateAsync({ type: "blob" });
+
+  // Create a download link
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(content);
+  link.download = `inventory_backup_${new Date().toISOString().slice(0,10)}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+  alert('Inventory data downloaded as ZIP!');
+};
+
+// Import Inventory (JSON)
+importJsonBtn.onclick = () => {
+  importJsonFile.click(); // Trigger the hidden file input click
+};
+
+importJsonFile.onchange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (Array.isArray(importedData)) {
+          // Basic validation for imported data structure
+          const isValid = importedData.every(item =>
+            typeof item.name === 'string' &&
+            typeof item.brand === 'string' &&
+            typeof item.totalQuantity === 'number' &&
+            typeof item.sold === 'number' &&
+            typeof item.price === 'number' &&
+            typeof item.dateAdded === 'string'
+          );
+
+          if (isValid) {
+            const confirmImport = confirm("Importing will overwrite your current inventory. Are you sure?");
+            if (confirmImport) {
+              items = importedData;
+              saveItems();
+              refreshUI();
+              alert('Inventory data imported successfully!');
+            }
+          } else {
+            alert('Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties.');
+          }
+        } else {
+          alert('Invalid JSON file. Expected an array of inventory items.');
+        }
+      } catch (error) {
+        alert('Error parsing JSON file. Please ensure it is a valid JSON.');
+        console.error('Error importing JSON:', error);
+      }
+    };
+    reader.readAsText(file);
+  }
+};
+
+printPdfBtn.onclick = () => {
+  // Create a temporary div to hold the content for the PDF
+  const printContent = document.createElement('div');
+  printContent.style.padding = '10px';
+  printContent.innerHTML = `<h1 style="text-align: center; margin-bottom: 20px;">Inventory In-Stock Report - ${new Date().toLocaleDateString()}</h1>`;
+
+  // Create a table specifically for the PDF report
+  const pdfTable = document.createElement('table');
+  pdfTable.style.width = '100%';
+  pdfTable.setAttribute('border', '1');
+  pdfTable.setAttribute('cellpadding', '5');
+  pdfTable.style.borderCollapse = 'collapse';
+
+  // Add table header
+  pdfTable.innerHTML += `
+      <thead>
+          <tr>
+              <th>Item Name</th>
+              <th>In Stock Quantity</th>
+              <th>Date Added</th>
+          </tr>
+      </thead>
+      <tbody>
+      </tbody>
+  `;
+
+  const pdfTableBody = pdfTable.querySelector('tbody');
+
+  // Populate the table with only the desired data
+  items.forEach(item => {
+      const inStockCount = item.totalQuantity - item.sold;
+      const dateAddedFormatted = new Date(item.dateAdded).toLocaleDateString();
+      pdfTableBody.innerHTML += `
+          <tr>
+              <td>${item.name}</td>
+              <td>${inStockCount}</td>
+              <td>${dateAddedFormatted}</td>
+          </tr>
+      `;
+  });
+
+  printContent.appendChild(pdfTable);
+
+  html2pdf().from(printContent).set({
+      margin: [0.5, 0.5, 0.5, 0.5],
+      filename: `inventory_in_stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+      html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+  }).save();
+};
+
+
+// --- MODAL RELATED JAVASCRIPT ---
+
+// Close modal when 'x' is clicked
+closeButton.onclick = () => {
+  editItemModal.style.display = 'none';
+};
+
+// Close modal when 'Cancel' is clicked
+cancelEditButton.onclick = () => {
+  editItemModal.style.display = 'none';
+};
+
+// Close modal when clicking outside of it
+window.onclick = (event) => {
+  if (event.target == editItemModal) {
+    editItemModal.style.display = 'none';
+  }
+};
+
+// Handle form submission inside the modal
+editItemForm.onsubmit = (e) => {
+  e.preventDefault();
+
+  const itemIndex = parseInt(editItemId.value, 10);
+  if (isNaN(itemIndex) || itemIndex < 0 || itemIndex >= items.length) {
+    alert('Error: Item not found for editing.');
+    editItemModal.style.display = 'none';
+    return;
+  }
+
+  const currentItem = items[itemIndex];
+
+  const newName = editItemName.value.trim();
+  const newBrand = editBrand.value.trim();
+  const newTotalQty = parseInt(editTotalQuantity.value, 10);
+  const newSold = parseInt(editSold.value, 10);
+  const newPrice = parseFloat(editPrice.value);
+
+  // Basic validation
+  if (!newName || !newBrand || isNaN(newTotalQty) || isNaN(newSold) || isNaN(newPrice)) {
+    alert('Please fill all fields correctly.');
+    return;
+  }
+  if (newSold > newTotalQty) {
+    alert('Sold quantity cannot be greater than total quantity.');
+    return;
+  }
+
+  
+  // Update the item
+  currentItem.name = newName;
+  currentItem.brand = newBrand;
+  currentItem.totalQuantity = newTotalQty;
+  currentItem.sold = newSold;
+  currentItem.price = newPrice;
+
+  saveItems();
   refreshUI();
+  editItemModal.style.display = 'none'; // Hide the modal
+  alert('Item updated successfully!');
+};
+
+// Initial load
+loadDarkModeSetting();
+refreshUI();
+
 </script>
 </body>
 </html>
