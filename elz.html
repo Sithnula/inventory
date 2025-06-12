@@ -113,8 +113,23 @@ body.dark tr.low-stock {
   color: #333 !important; /* Ensure text is visible on yellow */
 }
 tr.low-stock { /* Added for light mode to ensure yellow highlight */
-    background-color: yellow !important;
-    color: black !important;
+    background-color: yellow !important;
+    color: black !important;
+}
+
+/* Styles for general table rows */
+#itemTableBody tr {
+    /* Your default row styles */
+}
+
+/* Styles for low stock (yellow) */
+#itemTableBody tr.low-stock {
+    background-color: #ffff49; /* Light yellow */
+}
+
+/* Styles for critical low stock (red) - this rule should come AFTER .low-stock */
+#itemTableBody tr.critical-low-stock {
+    background-color: #ff5b5b; /* Light red */
 }
 
     input[type="text"]{
@@ -556,6 +571,7 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+
        const addItemForm = document.getElementById('addItemForm');
         const itemTableBody = document.getElementById('itemTableBody');
         const totalItemsCount = document.getElementById('totalItemsCount');
@@ -664,12 +680,16 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
 
                 // In stock count
          // In stock count
+// In stock count
 const inStockCount = item.totalQuantity - item.sold;
 
-// Add 'low-stock' class if item is low in stock
-if (inStockCount <= 15) { // Changed from 5 to 15
+// Add 'critical-low-stock' class if item is 5 or less
+if (inStockCount <= 5) {
+    tr.classList.add('critical-low-stock');
+} else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
     tr.classList.add('low-stock');
 }
+
 
                 tr.innerHTML = `
                     <td>${item.name}</td>
