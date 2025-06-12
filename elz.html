@@ -103,15 +103,19 @@ footer{
     background: #333;
   }
 
-  /* NEW: Low Stock highlighting */
-  tr.low-stock {
-    background-color: var(--danger) !important; /* Use !important to override other styles like hover */
-    color: white;
-  }
-  body.dark tr.low-stock {
-    background-color: #a02030 !important; /* Slightly darker red for dark mode */
-  }
 
+tr.low-stock {
+  background-color: var(--danger) !important; /* This will be overridden by the specific yellow below */
+  color: white;
+}
+body.dark tr.low-stock {
+  background-color: #fbff00 !important; /* Changed to yellow for dark mode */
+  color: #333 !important; /* Ensure text is visible on yellow */
+}
+tr.low-stock { /* Added for light mode to ensure yellow highlight */
+    background-color: yellow !important;
+    color: black !important;
+}
 
     input[type="text"]{
     border-radius: 5px;
@@ -335,7 +339,7 @@ footer{
     color: white;
     border-radius: 5px;
     height: 30px;
-    
+
   }
 
   /* Styles for the Edit Item Modal */
@@ -364,7 +368,8 @@ footer{
 
   body.dark #editItemModal > div {
       background-color: var(--bg-dark); /* Dark mode background */
-      color: var(--text-dark);
+      color: var(--text-white);
+   
   }
 
   
@@ -438,7 +443,7 @@ footer{
                 <option value="all">Show All</option>
                 <option value="inStock">In Stock</option>
                 <option value="soldOut">Sold Out</option>
-                <option value="lowStock">Low Stock (<= 5)</option>
+                <option value="lowStock">Low Stock (<= 15)</option>
                 <option value="highSold">High Sold</option>
                 <option value="lowSold">Low Sold</option>
             </select>
@@ -644,8 +649,8 @@ footer{
             } else if (statusFilter === 'soldOut') {
                 displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
             } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-                displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 5);
-            } else if (statusFilter === 'highSold') {
+    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
+} else if (statusFilter === 'highSold') {
                 displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
             } else if (statusFilter === 'lowSold') {
                 displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
@@ -658,12 +663,13 @@ footer{
                 const tr = document.createElement('tr');
 
                 // In stock count
-                const inStockCount = item.totalQuantity - item.sold;
+         // In stock count
+const inStockCount = item.totalQuantity - item.sold;
 
-                // Add 'low-stock' class if item is low in stock
-                if (inStockCount <= 5) {
-                    tr.classList.add('low-stock');
-                }
+// Add 'low-stock' class if item is low in stock
+if (inStockCount <= 15) { // Changed from 5 to 15
+    tr.classList.add('low-stock');
+}
 
                 tr.innerHTML = `
                     <td>${item.name}</td>
