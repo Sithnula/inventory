@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,16 +106,16 @@ footer{
 
 
 tr.low-stock {
-  background-color: var(--danger) !important; /* This will be overridden by the specific yellow below */
-  color: white;
+  background-color: var(--danger) !important; /* This will be overridden by the specific yellow below */
+  color: white;
 }
 body.dark tr.low-stock {
-  background-color: #fbff00 !important; /* Changed to yellow for dark mode */
-  color: #333 !important; /* Ensure text is visible on yellow */
+  background-color: #fbff00 !important; /* Changed to yellow for dark mode */
+  color: #333 !important; /* Ensure text is visible on yellow */
 }
 tr.low-stock { /* Added for light mode to ensure yellow highlight */
-    background-color: yellow !important;
-    color: black !important;
+    background-color: yellow !important;
+    color: black !important;
 }
 
 /* Styles for general table rows */
@@ -480,23 +481,23 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
         </div>
 
         <form id="addItemForm" aria-label="Add new inventory item">
-            <fieldset>
-                <legend>Add New Item</legend>
-                <label>
-                    Item Name: <input type="text" id="itemName" required />
-                </label>
-                <label>
-                    Brand: <input type="text" id="brand" required />
-                </label>
-                <label>
-                    Total Quantity: <input type="number" id="totalQuantity" min="1" required />
-                </label>
-                <label>
-                    Sold: <input type="number" id="sold" min="0" value="0" required />
-                </label>
-                <button type="submit">Add Item</button>
-            </fieldset>
-        </form>
+    <fieldset>
+        <legend>Add New Item</legend>
+        <label>
+            Item Name: <input type="text" id="itemName" required />
+        </label>
+        <label>
+            Brand: <input type="text" id="brand" required />
+        </label>
+        <label>
+            Total Quantity: <input type="number" id="totalQuantity" min="1" required />
+        </label>
+        <label>
+            Sold: <input type="number" id="sold" min="0" value="0" required />
+        </label>
+        <button type="submit">Add Item</button>
+    </fieldset>
+</form>
 
         <table aria-label="Inventory items table" id="itemTable" role="grid">
             <thead>
@@ -518,7 +519,6 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             <div class="card"><h2>Total Quantity</h2><p id="totalQuantityCount">0</p></div>
             <div class="card"><h2>Total Sold</h2><p id="totalSoldCount">0</p></div>
             <div class="card"><h2>In Stock</h2><p id="totalInStockCount">0</p></div>
-            <div class="card"><h2>Total Revenue</h2><p id="totalValueCount">Rs 0.00</p></div>
         </section>
 
         <section class="charts" aria-label="Sales charts">
@@ -665,7 +665,7 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             } else if (statusFilter === 'soldOut') {
                 displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
             } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
+    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
 } else if (statusFilter === 'highSold') {
                 displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
             } else if (statusFilter === 'lowSold') {
@@ -851,13 +851,12 @@ if (inStockCount <= 5) {
             const totalSold = items.reduce((acc, i) => acc + i.sold, 0);
             const totalInStock = totalQuantity - totalSold;
             // Calculate total revenue from sold items (assuming price is per item)
-            const totalRevenueFromSold = items.reduce((acc, i) => acc + (i.price || 0) * i.sold, 0);
 
             totalItemsCount.textContent = totalItems;
             totalQuantityCount.textContent = totalQuantity;
             totalSoldCount.textContent = totalSold;
             totalInStockCount.textContent = totalInStock;
-            totalValueCount.textContent = `Rs ${totalRevenueFromSold.toFixed(2)}`; // Display as "Total Revenue"
+            // Display as "Total Revenue"
         }
 
         // Charts update
@@ -968,9 +967,9 @@ if (inStockCount <= 5) {
             const brand = document.getElementById('brand').value.trim();
             const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
             const sold = parseInt(document.getElementById('sold').value, 10);
-            const price = parseFloat(document.getElementById('price').value); // Get price from add form
+             // Get price from add form
 
-            if (!name || !brand || isNaN(totalQuantity) || isNaN(sold) || isNaN(price)) {
+if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                 // Replaced alert with console log and message for consistency
                 console.error('Please fill all fields correctly.');
                 const messageBox = document.createElement('div');
@@ -1017,7 +1016,7 @@ if (inStockCount <= 5) {
                 brand,
                 totalQuantity,
                 sold,
-                price, // Include price in newItem
+                // Include price in newItem
                 dateAdded: new Date().toISOString()
             };
 
@@ -1233,7 +1232,6 @@ if (inStockCount <= 5) {
             pdfTableBody.innerHTML += `
                 <tr>
                     <td colspan="4" style="text-align: right; font-weight: bold;">Total Inventory Value:</td>
-                    <td style="font-weight: bold;">Rs ${totalReportValue.toFixed(2)}</td>
                 </tr>
             `;
 
