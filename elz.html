@@ -454,15 +454,16 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             <label for="filterBrand">Brand:</label>
             <input type="text" id="filterBrand" placeholder="Search by brand" />
 
-            <label for="filterStatus">Status:</label>
-            <select id="filterStatus" aria-label="Filter by stock status">
-                <option value="all">Show All</option>
-                <option value="inStock">In Stock</option>
-                <option value="soldOut">Sold Out</option>
-                <option value="lowStock">Low Stock (<= 15)</option>
-                <option value="highSold">High Sold</option>
-                <option value="lowSold">Low Sold</option>
-            </select>
+         <label for="filterStatus">Status:</label>
+<select id="filterStatus" aria-label="Filter by stock status">
+    <option value="all">Show All</option>
+    <option value="inStock">In Stock</option>
+    <option value="soldOut">Sold Out</option>
+    <option value="lowStock">Low Stock (<= 15)</option>
+    <option value="highSold">High Sold</option>
+    <option value="lowSold">Low Sold</option>
+    <option value="lastEdited">Last Edited (Newest First)</option> <!-- ADD THIS LINE -->
+</select>
 
             <div class="date">
             <label for="filterStartDate">Start Date:</label>
@@ -572,12 +573,12 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
 
-       const addItemForm = document.getElementById('addItemForm');
+   const addItemForm = document.getElementById('addItemForm');
         const itemTableBody = document.getElementById('itemTableBody');
         const totalItemsCount = document.getElementById('totalItemsCount');
         const totalQuantityCount = document.getElementById('totalQuantityCount');
         const totalSoldCount = document.getElementById('totalSoldCount');
-        const totalInStockCount = document.getElementById('totalInStockCount');
+        const totalInStockCount = document = document.getElementById('totalInStockCount');
         const totalValueCount = document.getElementById('totalValueCount'); // This will now show Total Revenue
         const monthlySoldBarChartCtx = document.getElementById('monthlySoldBarChart').getContext('2d');
         const soldItemsPieChartCtx = document.getElementById('soldItemsPieChart').getContext('2d');
@@ -665,12 +666,16 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
             } else if (statusFilter === 'soldOut') {
                 displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 0);
             } else if (statusFilter === 'lowStock') { // Low Stock filter logic
-    displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
-} else if (statusFilter === 'highSold') {
+                displayItems = displayItems.filter(item => (item.totalQuantity - item.sold) <= 15); // Changed from 5 to 15
+            } else if (statusFilter === 'highSold') {
                 displayItems.sort((a, b) => b.sold - a.sold); // Sort by sold quantity (descending)
             } else if (statusFilter === 'lowSold') {
                 displayItems.sort((a, b) => a.sold - b.sold); // Sort by sold quantity (ascending)
+            } else if (statusFilter === 'lastEdited') {
+                // Sort by lastEdited date (newest first)
+                displayItems.sort((a, b) => new Date(b.lastEdited || b.dateAdded).getTime() - new Date(a.lastEdited || a.dateAdded).getTime());
             }
+
 
             // Store the filtered items in the global variable for PDF generation
             filteredItemsForDisplay = displayItems;
@@ -679,16 +684,14 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                 const tr = document.createElement('tr');
 
                 // In stock count
-         // In stock count
-// In stock count
-const inStockCount = item.totalQuantity - item.sold;
+                const inStockCount = item.totalQuantity - item.sold;
 
-// Add 'critical-low-stock' class if item is 5 or less
-if (inStockCount <= 5) {
-    tr.classList.add('critical-low-stock');
-} else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
-    tr.classList.add('low-stock');
-}
+                // Add 'critical-low-stock' class if item is 5 or less
+                if (inStockCount <= 5) {
+                    tr.classList.add('critical-low-stock');
+                } else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
+                    tr.classList.add('low-stock');
+                }
 
 
                 tr.innerHTML = `
@@ -714,6 +717,7 @@ if (inStockCount <= 5) {
                 tr.querySelector('.sold-dec').onclick = () => {
                     if (item.sold > 0) {
                         item.sold--;
+                        item.lastEdited = new Date().toISOString(); // Update lastEdited
                         saveItems();
                         refreshUI();
                     }
@@ -722,6 +726,7 @@ if (inStockCount <= 5) {
                 tr.querySelector('.sold-inc').onclick = () => {
                     if (inStockCount > 0) {
                         item.sold++;
+                        item.lastEdited = new Date().toISOString(); // Update lastEdited
                         saveItems();
                         refreshUI();
                     }
@@ -729,24 +734,19 @@ if (inStockCount <= 5) {
 
                 // Edit All button with password prompt (opens modal)
                 tr.querySelector('.edit').onclick = () => {
-                    // Replaced alert/confirm with modal for consistency, although the original used prompt
                     const userPass = prompt('Enter password to edit this item:');
                     if (userPass === password) {
-                        // Find the index of the item to edit
                         const itemIndex = items.findIndex(i => i === item);
                         if (itemIndex > -1) {
-                            // Populate the modal fields with current item data
                             editItemId.value = itemIndex; // Store the index
                             editItemName.value = item.name;
                             editBrand.value = item.brand;
                             editTotalQuantity.value = item.totalQuantity;
                             editSold.value = item.sold;
-                            // No longer populate editPrice and editDateAdded
 
                             editItemModal.style.display = 'flex'; // Show the modal (use flex to center)
                         }
                     } else {
-                        // Replaced alert with console log and message for consistency
                         console.error('Wrong password entered for editing.');
                         const messageBox = document.createElement('div');
                         messageBox.className = 'modal-message';
@@ -759,13 +759,83 @@ if (inStockCount <= 5) {
                     }
                 };
 
+                // Handle edit form submission (inside the modal)
+                editItemForm.onsubmit = (e) => {
+                    e.preventDefault();
+                    const itemId = parseInt(editItemId.value, 10);
+                    if (itemId > -1) {
+                        const itemToUpdate = items[itemId];
+                        const newName = editItemName.value.trim();
+                        const newBrand = editBrand.value.trim();
+                        const newTotalQuantity = parseInt(editTotalQuantity.value, 10);
+                        const newSold = parseInt(editSold.value, 10);
+
+                        // Basic validation
+                        if (!newName || !newBrand || isNaN(newTotalQuantity) || isNaN(newSold)) {
+                            const messageBox = document.createElement('div');
+                            messageBox.className = 'modal-message';
+                            messageBox.innerHTML = `
+                                <p>Please fill all fields correctly.</p>
+                                <button class="modal-message-close">Close</button>
+                            `;
+                            document.body.appendChild(messageBox);
+                            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+                            return;
+                        }
+
+                        if (newSold > newTotalQuantity) {
+                            const messageBox = document.createElement('div');
+                            messageBox.className = 'modal-message';
+                            messageBox.innerHTML = `
+                                <p>Sold quantity cannot be greater than total quantity.</p>
+                                <button class="modal-message-close">Close</button>
+                            `;
+                            document.body.appendChild(messageBox);
+                            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+                            return;
+                        }
+
+                        // Check for duplicate name if the name is changed
+                        if (newName.toLowerCase() !== itemToUpdate.name.toLowerCase() && items.some((i, idx) => i.name.toLowerCase() === newName.toLowerCase() && idx !== itemId)) {
+                            const messageBox = document.createElement('div');
+                            messageBox.className = 'modal-message';
+                            messageBox.innerHTML = `
+                                <p>An item with this name already exists. Please choose a different name.</p>
+                                <button class="modal-message-close">Close</button>
+                            `;
+                            document.body.appendChild(messageBox);
+                            messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
+                            return;
+                        }
+
+                        itemToUpdate.name = newName;
+                        itemToUpdate.brand = newBrand;
+                        itemToUpdate.totalQuantity = newTotalQuantity;
+                        itemToUpdate.sold = newSold;
+                        itemToUpdate.lastEdited = new Date().toISOString(); // Update lastEdited on full edit
+
+                        saveItems();
+                        refreshUI();
+                        editItemModal.style.display = 'none'; // Hide modal
+                    }
+                };
+
+                // Close modal button
+                closeButton.onclick = () => {
+                    editItemModal.style.display = 'none';
+                };
+
+                // Cancel edit button
+                cancelEditButton.onclick = () => {
+                    editItemModal.style.display = 'none';
+                };
+
                 // Edit Total Quantity button with password prompt
                 tr.querySelector('.edit-qty').onclick = () => {
                     const userPass = prompt('Enter password to edit quantity:');
                     if (userPass === password) {
                         const quantityToAdd = parseInt(prompt('Enter quantity to add:', 0), 10); // Prompt for quantity to ADD
                         if (isNaN(quantityToAdd) || quantityToAdd < 0) {
-                            // Replaced alert with console log and message for consistency
                             console.error('Invalid quantity. Please enter a positive number.');
                             const messageBox = document.createElement('div');
                             messageBox.className = 'modal-message';
@@ -778,13 +848,11 @@ if (inStockCount <= 5) {
                             return;
                         }
 
-                        // *** MODIFIED LINE HERE: Add the input to the existing totalQuantity ***
                         item.totalQuantity += quantityToAdd;
-
+                        item.lastEdited = new Date().toISOString(); // Update lastEdited when quantity changes
                         saveItems();
                         refreshUI();
                     } else {
-                        // Replaced alert with console log and message for consistency
                         console.error('Wrong password entered for editing quantity.');
                         const messageBox = document.createElement('div');
                         messageBox.className = 'modal-message';
@@ -805,7 +873,6 @@ if (inStockCount <= 5) {
                         saveItems();
                         refreshUI();
                     } else {
-                        // Replaced alert with console log and message for consistency
                         console.error('Wrong password entered for deleting item.');
                         const messageBox = document.createElement('div');
                         messageBox.className = 'modal-message';
@@ -831,7 +898,8 @@ if (inStockCount <= 5) {
                         name: newName,
                         dateAdded: new Date().toISOString(), // Ensure new date for duplicated item
                         sold: 0, // Reset sold count for duplicate
-                        totalQuantity: item.totalQuantity // Keep original quantity
+                        totalQuantity: item.totalQuantity, // Keep original quantity
+                        lastEdited: new Date().toISOString() // Set lastEdited for duplicated item
                     });
                     saveItems();
                     refreshUI();
@@ -967,10 +1035,9 @@ if (inStockCount <= 5) {
             const brand = document.getElementById('brand').value.trim();
             const totalQuantity = parseInt(document.getElementById('totalQuantity').value, 10);
             const sold = parseInt(document.getElementById('sold').value, 10);
-             // Get price from add form
+            // Get price from add form
 
-if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
-                // Replaced alert with console log and message for consistency
+            if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                 console.error('Please fill all fields correctly.');
                 const messageBox = document.createElement('div');
                 messageBox.className = 'modal-message';
@@ -983,7 +1050,6 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                 return;
             }
             if (sold > totalQuantity) {
-                // Replaced alert with console log and message for consistency
                 console.error('Sold quantity cannot be greater than total quantity.');
                 const messageBox = document.createElement('div');
                 messageBox.className = 'modal-message';
@@ -998,7 +1064,6 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
 
             // Check if item name already exists (case-insensitive)
             if (items.some(i => i.name.toLowerCase() === name.toLowerCase())) {
-                // Replaced alert with console log and message for consistency
                 console.error('An item with this name already exists.');
                 const messageBox = document.createElement('div');
                 messageBox.className = 'modal-message';
@@ -1017,7 +1082,8 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                 totalQuantity,
                 sold,
                 // Include price in newItem
-                dateAdded: new Date().toISOString()
+                dateAdded: new Date().toISOString(),
+                lastEdited: new Date().toISOString() // Initialize lastEdited for new items
             };
 
             items.push(newItem);
@@ -1102,8 +1168,9 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                                 typeof item.brand === 'string' &&
                                 typeof item.totalQuantity === 'number' &&
                                 typeof item.sold === 'number' &&
-                                typeof item.price === 'number' && // Ensure price is present and number
+                                // typeof item.price === 'number' && // Ensure price is present and number (re-add if you have price in your data)
                                 typeof item.dateAdded === 'string'
+                                // No need to validate for 'lastEdited' on import, it can be added or updated later
                             );
 
                             if (isValid) {
@@ -1118,7 +1185,11 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                                 document.body.appendChild(customConfirm);
 
                                 document.getElementById('confirmYes').onclick = () => {
-                                    items = importedData;
+                                    // Ensure imported items have a lastEdited field
+                                    items = importedData.map(item => ({
+                                        ...item,
+                                        lastEdited: item.lastEdited || item.dateAdded // Use existing lastEdited or dateAdded as fallback
+                                    }));
                                     saveItems();
                                     refreshUI();
                                     customConfirm.remove();
@@ -1138,19 +1209,17 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                                 };
 
                             } else {
-                                // Replaced alert with console log and message for consistency
                                 console.error('Invalid JSON structure for import.');
                                 const messageBox = document.createElement('div');
                                 messageBox.className = 'modal-message';
                                 messageBox.innerHTML = `
-                                    <p>Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties (name, brand, totalQuantity, sold, price, dateAdded).</p>
+                                    <p>Invalid JSON structure. Please ensure the imported file contains an array of inventory items with correct properties (name, brand, totalQuantity, sold, dateAdded).</p>
                                     <button class="modal-message-close">Close</button>
                                 `;
                                 document.body.appendChild(messageBox);
                                 messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                             }
                         } else {
-                            // Replaced alert with console log and message for consistency
                             console.error('Invalid JSON file. Expected an array of inventory items.');
                             const messageBox = document.createElement('div');
                             messageBox.className = 'modal-message';
@@ -1162,7 +1231,6 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                             messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                         }
                     } catch (error) {
-                        // Replaced alert with console log and message for consistency
                         console.error('Error parsing JSON file. Please ensure it is a valid JSON.', error);
                         const messageBox = document.createElement('div');
                         messageBox.className = 'modal-message';
@@ -1177,7 +1245,6 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
                 reader.readAsText(file);
             }
         };
-
         printPdfBtn.onclick = () => {
             // Create a temporary div to hold the content for the PDF
             const printContent = document.createElement('div');
