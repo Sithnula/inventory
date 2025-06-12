@@ -158,6 +158,10 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
     background: #009688; /* A teal color */
     color: white;
   }
+    button.edit-sold { /* New style for edit quantity button */
+    background: #ff6600; /* A teal color */
+    color: white;
+  }
   button.delete {
     background: var(--danger);
     color: white;
@@ -708,6 +712,7 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                     <td class="item-actions">
                         <button class="edit" aria-label="Edit all details for ${item.name}">Edit All</button>
                         <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Edit Qty</button>
+                        <button class="edit-sold" aria-label="Edit total quantity for ${item.name}">Edit Sold</button>
                         <button class="delete" aria-label="Delete ${item.name}">Delete</button>
                         <button class="duplicate" aria-label="Duplicate ${item.name}">Duplicate</button>
                     </td>
@@ -830,6 +835,11 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                     editItemModal.style.display = 'none';
                 };
 
+
+                
+
+
+
                 // Edit Total Quantity button with password prompt
                 tr.querySelector('.edit-qty').onclick = () => {
                     const userPass = prompt('Enter password to edit quantity:');
@@ -864,6 +874,28 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                         messageBox.querySelector('.modal-message-close').onclick = () => messageBox.remove();
                     }
                 };
+
+  // Sold button with password prompt
+
+                tr.querySelector('.edit-sold').onclick = () => {
+    const userPass = prompt('Enter password to edit sold quantity:');
+    if (userPass === password) {
+        const quantityToAdd = parseInt(prompt('Enter quantity to add to sold:', 0), 10);
+        if (isNaN(quantityToAdd) || quantityToAdd < 0) {
+            showModalMessage('Invalid sold quantity. Please enter a positive number.');
+            return;
+        }
+
+        item.sold = (item.sold || 0) + quantityToAdd;
+        item.lastEdited = new Date().toISOString();
+        saveItems();
+        refreshUI();
+    } else {
+        showModalMessage('Wrong password!');
+    }
+};
+
+
 
                 // Delete button with password prompt
                 tr.querySelector('.delete').onclick = () => {
