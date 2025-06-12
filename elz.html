@@ -1178,73 +1178,56 @@ if (!name || !brand || isNaN(totalQuantity) || isNaN(sold)) {
             }
         };
 
-        printPdfBtn.onclick = () => {
-            // Create a temporary div to hold the content for the PDF
-            const printContent = document.createElement('div');
-            printContent.style.padding = '10px';
-            printContent.innerHTML = `<h1 style="text-align: center; margin-bottom: 20px;">Inventory In-Stock Report - ${new Date().toLocaleDateString()}</h1>`;
+     printPdfBtn.onclick = () => {
+    const printContent = document.createElement('div');
+    printContent.style.padding = '10px';
+    printContent.innerHTML = `<h1 style="text-align: center; margin-bottom: 20px;">Inventory In-Stock Report - ${new Date().toLocaleDateString()}</h1>`;
 
-            // Create a table specifically for the PDF report
-            const pdfTable = document.createElement('table');
-            pdfTable.style.width = '100%';
-            pdfTable.setAttribute('border', '1');
-            pdfTable.setAttribute('cellpadding', '5');
-            pdfTable.style.borderCollapse = 'collapse';
-            pdfTable.style.fontSize = '12px'; // Smaller font for PDF
+    const pdfTable = document.createElement('table');
+    pdfTable.style.width = '100%';
+    pdfTable.setAttribute('border', '1');
+    pdfTable.setAttribute('cellpadding', '5');
+    pdfTable.style.borderCollapse = 'collapse';
+    pdfTable.style.fontSize = '12px';
+    pdfTable.style.color = '#000';
+    pdfTable.style.backgroundColor = '#fff';
 
-            // Add table header
-            pdfTable.innerHTML += `
-                <thead>
-                    <tr>
-                        <th style="background-color: #007bff; color: white;">Item Name</th>
-                        <th style="background-color: #007bff; color: white;">In Stock Quantity</th>
-                        <th style="background-color: #007bff; color: white;">Date Added</th>
-                        <th style="background-color: #007bff; color: white;">Price (Rs)</th>
-                        <th style="background-color: #007bff; color: white;">Total Value (Rs)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            `;
+    pdfTable.innerHTML += `
+        <thead>
+            <tr>
+                <th style="background-color: #eee; color: #000;">Item Name</th>
+                <th style="background-color: #eee; color: #000;">In Stock Quantity</th>
+                <th style="background-color: #eee; color: #000;">Date Added</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    `;
 
-            const pdfTableBody = pdfTable.querySelector('tbody');
-            let totalReportValue = 0;
+    const pdfTableBody = pdfTable.querySelector('tbody');
 
-            // Populate the table with only the *filtered* items (using filteredItemsForDisplay)
-            filteredItemsForDisplay.forEach(item => {
-                const inStockCount = item.totalQuantity - item.sold;
-                const dateAddedFormatted = new Date(item.dateAdded).toLocaleDateString();
-                const itemValue = inStockCount * (item.price || 0); // Calculate value for in-stock items
-                totalReportValue += itemValue;
+    filteredItemsForDisplay.forEach(item => {
+        const inStockCount = item.totalQuantity - item.sold;
+        const dateAddedFormatted = new Date(item.dateAdded).toLocaleDateString();
 
-                pdfTableBody.innerHTML += `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td>${inStockCount}</td>
-                        <td>${dateAddedFormatted}</td>
-                        <td>${(item.price || 0).toFixed(2)}</td>
-                        <td>${itemValue.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
+        pdfTableBody.innerHTML += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${inStockCount}</td>
+                <td>${dateAddedFormatted}</td>
+            </tr>
+        `;
+    });
 
-            // Add a total row
-            pdfTableBody.innerHTML += `
-                <tr>
-                    <td colspan="4" style="text-align: right; font-weight: bold;">Total Inventory Value:</td>
-                </tr>
-            `;
+    printContent.appendChild(pdfTable);
 
-            printContent.appendChild(pdfTable);
-
-            html2pdf().from(printContent).set({
-                margin: [0.5, 0.5, 0.5, 0.5],
-                filename: `inventory_in_stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
-                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            }).save();
-        };
-
+    html2pdf().from(printContent).set({
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `inventory_in_stock_report_${new Date().toISOString().slice(0, 10)}.pdf`,
+        html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    }).save();
+};
 
         // --- MODAL RELATED JAVASCRIPT ---
 
