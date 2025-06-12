@@ -513,7 +513,7 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                     <th>Sold</th>
                     <th>In Stock</th>
                     <th>Date Added</th>
-                    <th>Actions</th>
+                    <th>Actions Edit</th>
                 </tr>
             </thead>
             <tbody id="itemTableBody"></tbody>
@@ -710,11 +710,11 @@ tr.low-stock { /* Added for light mode to ensure yellow highlight */
                     <td>${inStockCount}</td>
                     <td>${new Date(item.dateAdded).toLocaleDateString()}</td>
                     <td class="item-actions">
-                        <button class="edit" aria-label="Edit all details for ${item.name}">Edit All</button>
-                        <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Edit Qty</button>
-                        <button class="edit-sold" aria-label="Edit total quantity for ${item.name}">Edit Sold</button>
-                        <button class="delete" aria-label="Delete ${item.name}">Delete</button>
-                        <button class="duplicate" aria-label="Duplicate ${item.name}">Duplicate</button>
+                        <button class="edit" aria-label="Edit all details for ${item.name}">All</button>
+                        <button class="edit-qty" aria-label="Edit total quantity for ${item.name}">Qty</button>
+                        <button class="edit-sold" aria-label="Edit total quantity for ${item.name}">Sold</button>
+                        <button class="delete" aria-label="Delete ${item.name}">🗑️</button>
+                        <button class="duplicate" aria-label="Duplicate ${item.name}">🗐</button>
                     </td>
                 `;
 
