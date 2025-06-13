@@ -104,19 +104,24 @@ body.dark tr:hover {
   background: #333;
 }
 
-/* Styles for general table rows */
-#itemTableBody tr {
-  /* Your default row styles can go here */
+/* Styles for low stock (yellow) - between 1 and 5 */
+#itemTableBody tr.low-stock {
+    background-color: #ffc107; /* Light yellow */
+    color: #333; /* Darker text for contrast on yellow */
+}
+body.dark #itemTableBody tr.low-stock {
+    background-color: #e0a800; /* Darker yellow for dark mode */
+    color: white;
 }
 
-/* Styles for critical low stock (red) - this rule should come AFTER .low-stock for proper override */
+/* Styles for critical low stock (red) - 0 or less. This rule must come AFTER .low-stock for proper override */
 #itemTableBody tr.critical-low-stock {
-  background-color: #ff5b5b; /* Light red */
-  color: white;
+    background-color: #ff5b5b; /* Light red */
+    color: white;
 }
 body.dark #itemTableBody tr.critical-low-stock {
-  background-color: #dc3545; /* Darker red for dark mode */
-  color: white;
+    background-color: #dc3545; /* Darker red for dark mode */
+    color: white;
 }
 
   input[type="text"]{
@@ -530,10 +535,56 @@ body.dark .close-button:focus {
     to {top: 0; opacity: 1}
 }
 
+
+/* Scroll Buttons */
+.scroll-buttons {
+    position: fixed;
+    bottom: 20px; /* Adjust as needed */
+    right: 20px; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000; /* Ensure buttons are above other content */
+}
+
+.scroll-buttons button {
+    background-color: var(--primary); /* Uses your defined primary color */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+}
+
+.scroll-buttons button:hover {
+    background-color: var(--primary-dark); /* Assuming you have a darker shade for hover */
+    /* If you don't have --primary-dark, you can use a fixed color like #0056b3 */
+}
+
+/* Dark mode adjustments for scroll buttons */
+body.dark-mode .scroll-buttons button {
+    background-color: #555; /* Darker background for dark mode */
+    color: #eee;
+}
+
+body.dark-mode .scroll-buttons button:hover {
+    background-color: #777;
+}
+
+
 </style>
 </head>
 <body>
 <button id="modeToggleBtn" aria-label="Toggle Dark Mode">🌙</button>
+
+
+<div class="scroll-buttons">
+    <button id="scrollToTopBtn" title="Scroll to Top">&#9650; Top</button>
+    <button id="scrollToBottomBtn" title="Scroll to Bottom">&#9660; Bottom</button>
+</div>
 
     <header>
         <h1>Inventory Management Dashboard</h1>
@@ -783,6 +834,18 @@ function saveItems() {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 printPdfBtn.onclick = async () => {
     showModalMessage('Attempting to generate PDF... Please wait.');
 
@@ -886,7 +949,29 @@ printPdfBtn.onclick = async () => {
 
 
 
+// Get references to the new scroll buttons
+const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
 
+// Add event listener for scroll to top button
+if (scrollToTopBtn) {
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Smooth scrolling animation
+        });
+    });
+}
+
+// Add event listener for scroll to bottom button
+if (scrollToBottomBtn) {
+    scrollToBottomBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: document.body.scrollHeight, // Scrolls to the very bottom of the document
+            behavior: 'smooth' // Smooth scrolling animation
+        });
+    });
+}
 
 
 
@@ -956,9 +1041,9 @@ function refreshUI() {
         const inStockCount = item.totalQuantity - item.sold;
 
         // Add 'critical-low-stock' class if item is 5 or less
-        if (inStockCount <= 5) {
+        if (inStockCount <= 0) {
             tr.classList.add('critical-low-stock');
-        } else if (inStockCount <= 15) { // Add 'low-stock' class if item is between 6 and 15
+        } else if (inStockCount <= 5) { // Add 'low-stock' class if item is between 6 and 15
             tr.classList.add('low-stock');
         }
 
